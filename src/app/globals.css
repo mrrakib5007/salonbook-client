@@ -5,6 +5,7 @@
   --brand-primary: #7a2e4d;
   --brand-secondary: #d98aa6;
   --brand-light: #fbf7f4;
+  --brand-bg: color-mix(in srgb, var(--brand-primary) 4%, #ffffff);
 }
 
 @theme inline {
@@ -14,8 +15,12 @@
   --color-brand-primary: var(--brand-primary);
   --color-brand-secondary: var(--brand-secondary);
   --color-brand-light: var(--brand-light);
+  --color-brand-bg: var(--brand-bg);
 }
 
+html,
 body {
+  background-color: var(--brand-bg);
+  color: #1c1917;
   font-family: var(--font-poppins), sans-serif;
 }
