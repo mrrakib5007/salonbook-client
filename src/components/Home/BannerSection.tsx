@@ -5,8 +5,7 @@ import { LuSparkles, LuStar } from "react-icons/lu";
 
 const BannerSection = () => {
   return (
-    <section className="relative w-full overflow-hidden bg-[#1e0a14]">
-      {/* Salon-Themed Background Image with Next.js Optimization */}
+    <section className="relative w-full overflow-hidden bg-[#1e0a14]">      
       <div className="absolute inset-0 z-0">
         <Image
           src="/banner-bg.jpg"
@@ -22,7 +21,7 @@ const BannerSection = () => {
       </div>
 
       {/* Hero Content Container */}
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-28">
         <div className="flex flex-col items-center text-center sm:items-start sm:text-left max-w-2xl lg:max-w-3xl">
           {/* Top Pill / Badge */}
           <div className="inline-flex items-center gap-2 rounded-full border border-brand-secondary/30 bg-white/10 px-4 py-1.5 text-xs sm:text-sm font-medium text-brand-secondary backdrop-blur-md">
