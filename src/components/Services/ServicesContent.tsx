@@ -24,34 +24,50 @@ export default function ServicesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Initial values from URL search params
-  const initialCategory = searchParams.get("category") || "All";
-  const initialSearch = searchParams.get("search") || "";
-  const initialSort = searchParams.get("sort") || "";
+  // Single Source of Truth directly from URL search params
+  const selectedCategory = searchParams.get("category") || "All";
+  const searchFromUrl = searchParams.get("search") || "";
+  const sortBy = searchParams.get("sort") || "";
 
-  // Component States
+  // Local state for smooth text typing in search input
+  const [searchInput, setSearchInput] = useState<string>(searchFromUrl);
+  const [prevSearchFromUrl, setPrevSearchFromUrl] = useState<string>(searchFromUrl);
+
+  // Sync search input if URL search param changes externally
+  if (prevSearchFromUrl !== searchFromUrl) {
+    setPrevSearchFromUrl(searchFromUrl);
+    setSearchInput(searchFromUrl);
+  }
+
   const [categories, setCategories] = useState<CategoryItem[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
-  const [searchInput, setSearchInput] = useState<string>(initialSearch);
-  const [debouncedSearch, setDebouncedSearch] = useState<string>(initialSearch);
-  const [sortBy, setSortBy] = useState<string>(initialSort);
-
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
   const serverUrl = useMemo(
-    () => process.env.NEXT_PUBLIC_SERVER_URL,
+    () => process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000",
     []
   );
 
-  // Sync debounced search
+  // Debounce search input and update URL accordingly
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput.trim());
+      const trimmed = searchInput.trim();
+
+      if (trimmed !== searchFromUrl) {
+        setLoading(true);
+        const params = new URLSearchParams(searchParams.toString());
+        if (trimmed) {
+          params.set("search", trimmed);
+        } else {
+          params.delete("search");
+        }
+        const query = params.toString();
+        router.replace(query ? `/services?${query}` : "/services", { scroll: false });
+      }
     }, 350);
 
     return () => clearTimeout(timer);
-  }, [searchInput]);
+  }, [searchInput, searchFromUrl, searchParams, router]);
 
   // Load Categories on mount
   useEffect(() => {
@@ -79,7 +95,7 @@ export default function ServicesContent() {
     };
   }, [serverUrl]);
 
-  // Fetch Services from API based on active search, category, and sort
+  // Fetch Services from API whenever URL filters (category, search, sort) change
   useEffect(() => {
     let isMounted = true;
     const controller = new AbortController();
@@ -92,18 +108,13 @@ export default function ServicesContent() {
           params.set("category", selectedCategory);
         }
 
-        if (debouncedSearch) {
-          params.set("search", debouncedSearch);
+        if (searchFromUrl) {
+          params.set("search", searchFromUrl);
         }
 
         if (sortBy) {
           params.set("sort", sortBy);
         }
-
-        // Update URL search params cleanly without hard reload
-        const urlQuery = params.toString();
-        const newUrl = urlQuery ? `/services?${urlQuery}` : "/services";
-        router.replace(newUrl, { scroll: false });
 
         const res = await fetch(`${serverUrl}/api/services?${params.toString()}`, {
           cache: "no-store",
@@ -140,33 +151,46 @@ export default function ServicesContent() {
       isMounted = false;
       controller.abort();
     };
-  }, [debouncedSearch, selectedCategory, sortBy, serverUrl, router]);
+  }, [selectedCategory, searchFromUrl, sortBy, serverUrl]);
 
   // Handle Category selection
   const handleCategorySelect = (categoryName: string) => {
-    setSelectedCategory(categoryName);
     setLoading(true);
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (categoryName && categoryName !== "All") {
+      params.set("category", categoryName);
+    } else {
+      params.delete("category");
+    }
+    const query = params.toString();
+    router.replace(query ? `/services?${query}` : "/services", { scroll: false });
   };
 
   // Handle Search Input change
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
-    setLoading(true);
   };
 
   // Handle Sort By change
   const handleSortChange = (value: string) => {
-    setSortBy(value);
     setLoading(true);
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.set("sort", value);
+    } else {
+      params.delete("sort");
+    }
+    const query = params.toString();
+    router.replace(query ? `/services?${query}` : "/services", { scroll: false });
   };
 
   // Handle Reset all filters
   const handleResetFilters = () => {
-    setSelectedCategory("All");
     setSearchInput("");
-    setDebouncedSearch("");
-    setSortBy("");
     setLoading(true);
+    router.replace("/services", { scroll: false });
   };
 
   return (
