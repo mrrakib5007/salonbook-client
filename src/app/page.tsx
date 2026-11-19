@@ -1,6 +1,7 @@
 import React, { Suspense } from "react";
 import BannerSection from "@/components/Home/BannerSection";
 import FeaturedServices from "@/components/Home/FeaturedServices";
+import CategorySection from "@/components/Home/CategorySection";
 
 function FeaturedServicesSkeleton() {
   return (
@@ -30,6 +31,7 @@ export default function Home() {
       <Suspense fallback={<FeaturedServicesSkeleton />}>
         <FeaturedServices />
       </Suspense>
+      <CategorySection />
     </div>
   );
 }
