@@ -3,6 +3,7 @@
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Logo from "./Logo";
 import {
   LuChevronDown,
   LuHouse,
@@ -119,69 +120,6 @@ function MobileNavLink({
   );
 }
 
-function BrandLogo({ onClick }: { onClick?: () => void }) {
-  return (
-    <Link
-      href="/"
-      onClick={onClick}
-      className="group inline-flex items-center gap-2.5 focus:outline-none"
-    >
-      <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary shadow-sm transition-transform duration-200 group-hover:scale-105">
-        <svg
-          viewBox="0 0 40 40"
-          fill="none"
-          aria-hidden="true"
-          className="h-6 w-6"
-        >
-          <path
-            d="M13 8L20 20.5L27 8"
-            stroke="#fbf7f4"
-            strokeWidth="2.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M20 20.5L14.2 29.2"
-            stroke="#fbf7f4"
-            strokeWidth="2.6"
-            strokeLinecap="round"
-          />
-          <path
-            d="M20 20.5L25.8 29.2"
-            stroke="#fbf7f4"
-            strokeWidth="2.6"
-            strokeLinecap="round"
-          />
-          <circle
-            cx="12"
-            cy="31.5"
-            r="3.5"
-            stroke="#fbf7f4"
-            strokeWidth="2.4"
-          />
-          <circle
-            cx="28"
-            cy="31.5"
-            r="3.5"
-            stroke="#fbf7f4"
-            strokeWidth="2.4"
-          />
-          <path
-            d="M17.8 32L19.4 33.6L22.5 30.2"
-            stroke="#d98aa6"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      </span>
-      <span className="font-fraunces text-xl sm:text-2xl font-semibold tracking-tight text-stone-900">
-        Salon<span className="text-brand-primary">Book</span>
-      </span>
-    </Link>
-  );
-}
-
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -249,7 +187,7 @@ const Navbar = () => {
           className="mx-auto flex h-18 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8"
         >
           {/* Left: Brand Logo */}
-          <BrandLogo />
+          <Logo />
 
           {/* Center: Desktop Navigation Links */}
           <div className="hidden lg:flex lg:items-center lg:gap-2">
@@ -373,7 +311,7 @@ const Navbar = () => {
       >
         {/* Slider Header */}
         <div className="flex items-center justify-between border-b border-brand-primary/10 bg-brand-light/60 px-5 py-4">
-          <BrandLogo onClick={closeMobileMenu} />
+          <Logo onClick={closeMobileMenu} />
           <button
             type="button"
             onClick={closeMobileMenu}

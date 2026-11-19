@@ -2,6 +2,7 @@
 
 import React, { useSyncExternalStore } from "react";
 import Link from "next/link";
+import Logo from "./Logo";
 import {
   LuClock,
   LuFacebook,
@@ -46,63 +47,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4 lg:gap-8">
           {/* Column 1: Logo & Short Description */}
           <div className="space-y-4">
-            <Link
-              href="/"
-              className="group inline-flex items-center gap-2.5 focus:outline-none"
-            >
-              <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-brand-primary shadow-sm transition-transform duration-200 group-hover:scale-105">
-                <svg
-                  viewBox="0 0 40 40"
-                  fill="none"
-                  aria-hidden="true"
-                  className="h-6 w-6"
-                >
-                  <path
-                    d="M13 8L20 20.5L27 8"
-                    stroke="#fbf7f4"
-                    strokeWidth="2.6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M20 20.5L14.2 29.2"
-                    stroke="#fbf7f4"
-                    strokeWidth="2.6"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    d="M20 20.5L25.8 29.2"
-                    stroke="#fbf7f4"
-                    strokeWidth="2.6"
-                    strokeLinecap="round"
-                  />
-                  <circle
-                    cx="12"
-                    cy="31.5"
-                    r="3.5"
-                    stroke="#fbf7f4"
-                    strokeWidth="2.4"
-                  />
-                  <circle
-                    cx="28"
-                    cy="31.5"
-                    r="3.5"
-                    stroke="#fbf7f4"
-                    strokeWidth="2.4"
-                  />
-                  <path
-                    d="M17.8 32L19.4 33.6L22.5 30.2"
-                    stroke="#d98aa6"
-                    strokeWidth="2.2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-              <span className="font-fraunces text-2xl font-semibold tracking-tight text-white">
-                Salon<span className="text-brand-secondary">Book</span>
-              </span>
-            </Link>
+            <Logo variant="dark" />
 
             <p className="text-sm leading-relaxed text-stone-400">
               Your premier salon appointment booking platform. Explore expert
