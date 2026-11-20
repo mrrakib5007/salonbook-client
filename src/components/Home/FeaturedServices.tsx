@@ -1,12 +1,13 @@
 import React from "react";
 import Link from "next/link";
+import { connection } from "next/server";
 import { LuArrowRight, LuScissors } from "react-icons/lu";
 import ServiceCard, { Service } from "@/components/Card/ServiceCard";
 
 async function getFeaturedServices(): Promise<Service[]> {
   try {
     const serverUrl =
-      process.env.NEXT_PUBLIC_SERVER_URL;
+      process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
     const res = await fetch(`${serverUrl}/api/services?limit=6`, {
       cache: "no-store",
     });
@@ -23,6 +24,7 @@ async function getFeaturedServices(): Promise<Service[]> {
 }
 
 const FeaturedServices = async () => {
+  await connection();
   // Fetch live active services from backend API
   const liveServices = await getFeaturedServices();
   const servicesToDisplay = liveServices.slice(0, 6);

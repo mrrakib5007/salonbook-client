@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { connection } from "next/server";
 import {
   LuArrowRight,
   LuFlower2,
@@ -40,7 +41,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 async function getCategories(): Promise<Category[]> {
   try {
     const serverUrl =
-      process.env.NEXT_PUBLIC_SERVER_URL;
+      process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
     const res = await fetch(`${serverUrl}/api/categories`, {
       cache: "no-store",
     });
@@ -57,6 +58,7 @@ async function getCategories(): Promise<Category[]> {
 }
 
 const CategorySection = async () => {
+  await connection();
   // Fetch dynamic categories from the database API
   const categories = await getCategories();
   const hasCategories = Array.isArray(categories) && categories.length > 0;
