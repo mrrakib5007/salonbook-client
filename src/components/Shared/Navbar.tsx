@@ -2,8 +2,10 @@
 
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
 import Logo from "./Logo";
+import { signOut, useSession } from "@/lib/auth-client";
 import {
   LuChevronDown,
   LuHouse,
@@ -120,16 +122,120 @@ function MobileNavLink({
   );
 }
 
+function UserAvatar({
+  image,
+  name,
+  size = 32,
+  className = "h-8 w-8",
+  iconClassName = "text-sm",
+}: {
+  image?: string | null;
+  name?: string | null;
+  size?: number;
+  className?: string;
+  iconClassName?: string;
+}) {
+  const [hasError, setHasError] = useState(false);
+
+  if (image && !hasError) {
+    return (
+      <Image
+        key={image}
+        src={image}
+        alt={name || "User"}
+        width={size}
+        height={size}
+        className={`${className} shrink-0 rounded-full object-cover`}
+        onError={() => setHasError(true)}
+        unoptimized
+      />
+    );
+  }
+
+  return (
+    <span
+      className={`flex ${className} shrink-0 items-center justify-center rounded-full bg-brand-primary text-xs font-semibold text-brand-light`}
+    >
+      <LuUser className={iconClassName} />
+    </span>
+  );
+}
+
+function ProfileMenuDropdown({
+  currentUser,
+  userRole,
+  onClose,
+  onLogout,
+}: {
+  currentUser?: { name?: string | null; email?: string | null; image?: string | null };
+  userRole: string;
+  onClose: () => void;
+  onLogout: () => void;
+}) {
+  return (
+    <div
+      role="menu"
+      className="absolute right-0 mt-2.5 w-60 origin-top-right rounded-2xl border border-brand-primary/10 bg-white p-2 shadow-xl z-50"
+    >
+      <div className="border-b border-stone-100 px-3 py-2.5">
+        <p className="truncate text-sm font-semibold text-stone-900">
+          {currentUser?.name || "User"}
+        </p>
+        <p className="truncate text-xs text-stone-500">
+          {currentUser?.email}
+        </p>
+        <div className="mt-1.5 flex items-center">
+          <span className="inline-flex items-center rounded-md border border-brand-primary/20 bg-brand-light px-2 py-0.5 text-[11px] font-medium capitalize text-brand-primary">
+            {userRole}
+          </span>
+        </div>
+      </div>
+
+      <div className="py-1.5">
+        <Link
+          href="/dashboard"
+          onClick={onClose}
+          className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-stone-700 transition hover:bg-brand-light hover:text-brand-primary"
+        >
+          <LuLayoutDashboard className="text-base text-brand-primary" />
+          <span>Dashboard</span>
+        </Link>
+      </div>
+
+      <div className="border-t border-stone-100 pt-1.5">
+        <button
+          type="button"
+          onClick={onLogout}
+          className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50 cursor-pointer"
+        >
+          <LuLogOut className="text-base" />
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 const Navbar = () => {
+  const router = useRouter();
+  const { data: session } = useSession();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isMobileProfileOpen, setIsMobileProfileOpen] = useState(false);
   const profileDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileProfileDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Static UI state only — replace with actual auth state when integrating authentication
-  const isLoggedIn = false;
-  const mockUser = {
-    name: "Guest User",
-    email: "customer@salonbook.com",
+  const isLoggedIn = !!session?.user;
+  const currentUser = session?.user;
+  const userRole = (currentUser as { role?: string } | undefined)?.role || "user";
+
+  const handleLogout = async () => {
+    setIsProfileOpen(false);
+    setIsMobileProfileOpen(false);
+    setIsMobileMenuOpen(false);
+    await signOut();
+    router.push("/");
+    router.refresh();
   };
 
   const navItems: NavItem[] = isLoggedIn
@@ -142,11 +248,18 @@ const Navbar = () => {
   // Close dropdown on outside click and close overlays on Escape key
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node;
       if (
         profileDropdownRef.current &&
-        !profileDropdownRef.current.contains(event.target as Node)
+        !profileDropdownRef.current.contains(target)
       ) {
         setIsProfileOpen(false);
+      }
+      if (
+        mobileProfileDropdownRef.current &&
+        !mobileProfileDropdownRef.current.contains(target)
+      ) {
+        setIsMobileProfileOpen(false);
       }
     };
 
@@ -154,6 +267,7 @@ const Navbar = () => {
       if (event.key === "Escape") {
         setIsMobileMenuOpen(false);
         setIsProfileOpen(false);
+        setIsMobileProfileOpen(false);
       }
     };
 
@@ -207,10 +321,14 @@ const Navbar = () => {
                   aria-haspopup="menu"
                   className="flex items-center gap-2.5 rounded-full border border-brand-primary/15 bg-brand-light/70 py-1.5 pl-1.5 pr-3.5 text-sm font-medium text-stone-800 transition hover:border-brand-primary/30 hover:bg-brand-light cursor-pointer"
                 >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-primary text-xs font-semibold text-brand-light">
-                    <LuUser className="text-sm" />
-                  </span>
-                  <span className="max-w-32 truncate">{mockUser.name}</span>
+                  <UserAvatar
+                    image={currentUser?.image}
+                    name={currentUser?.name}
+                    size={32}
+                    className="h-8 w-8"
+                    iconClassName="text-sm"
+                  />
+                  <span className="max-w-32 truncate">{currentUser?.name || "User"}</span>
                   <LuChevronDown
                     className={`text-stone-500 transition-transform duration-200 ${
                       isProfileOpen ? "rotate-180" : ""
@@ -220,41 +338,12 @@ const Navbar = () => {
 
                 {/* Profile Dropdown Menu */}
                 {isProfileOpen && (
-                  <div
-                    role="menu"
-                    className="absolute right-0 mt-2.5 w-56 origin-top-right rounded-2xl border border-brand-primary/10 bg-white p-2 shadow-xl"
-                  >
-                    <div className="border-b border-stone-100 px-3 py-2.5">
-                      <p className="truncate text-sm font-semibold text-stone-900">
-                        {mockUser.name}
-                      </p>
-                      <p className="truncate text-xs text-stone-500">
-                        {mockUser.email}
-                      </p>
-                    </div>
-
-                    <div className="py-1.5">
-                      <Link
-                        href="/dashboard"
-                        onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-stone-700 transition hover:bg-brand-light hover:text-brand-primary"
-                      >
-                        <LuLayoutDashboard className="text-base text-brand-primary" />
-                        <span>Dashboard</span>
-                      </Link>
-                    </div>
-
-                    <div className="border-t border-stone-100 pt-1.5">
-                      <button
-                        type="button"
-                        onClick={() => setIsProfileOpen(false)}
-                        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-50 cursor-pointer"
-                      >
-                        <LuLogOut className="text-base" />
-                        <span>Logout</span>
-                      </button>
-                    </div>
-                  </div>
+                  <ProfileMenuDropdown
+                    currentUser={currentUser}
+                    userRole={userRole}
+                    onClose={() => setIsProfileOpen(false)}
+                    onLogout={handleLogout}
+                  />
                 )}
               </div>
             ) : (
@@ -275,11 +364,49 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Menu Toggle Button */}
-          <div className="flex items-center lg:hidden">
+          {/* Mobile Actions: Profile Avatar (if logged in) + Hamburger Button */}
+          <div className="flex items-center gap-2 lg:hidden">
+            {isLoggedIn && (
+              <div className="relative" ref={mobileProfileDropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsProfileOpen(false);
+                    setIsMobileProfileOpen((prev) => !prev);
+                  }}
+                  aria-expanded={isMobileProfileOpen}
+                  aria-haspopup="menu"
+                  aria-label="Open user profile menu"
+                  className="flex items-center rounded-full border border-brand-primary/20 p-0.5 transition hover:border-brand-primary/40 focus:outline-hidden cursor-pointer"
+                >
+                  <UserAvatar
+                    image={currentUser?.image}
+                    name={currentUser?.name}
+                    size={36}
+                    className="h-9 w-9"
+                    iconClassName="text-base"
+                  />
+                </button>
+
+                {/* Mobile Profile Dropdown Popup (Same responsive popup as PC) */}
+                {isMobileProfileOpen && (
+                  <ProfileMenuDropdown
+                    currentUser={currentUser}
+                    userRole={userRole}
+                    onClose={() => setIsMobileProfileOpen(false)}
+                    onLogout={handleLogout}
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Mobile Menu Toggle Button */}
             <button
               type="button"
-              onClick={() => setIsMobileMenuOpen(true)}
+              onClick={() => {
+                setIsMobileProfileOpen(false);
+                setIsMobileMenuOpen(true);
+              }}
               aria-label="Open navigation menu"
               aria-expanded={isMobileMenuOpen}
               className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-brand-primary/15 bg-brand-light/70 text-stone-800 transition hover:border-brand-primary/30 hover:text-brand-primary cursor-pointer"
@@ -322,23 +449,6 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Optional Authenticated User Summary inside Mobile Slider */}
-        {isLoggedIn && (
-          <div className="mx-4 mt-4 flex items-center gap-3 rounded-2xl border border-brand-primary/10 bg-brand-light p-3.5">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-primary text-brand-light">
-              <LuUser className="text-lg" />
-            </span>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-stone-900">
-                {mockUser.name}
-              </p>
-              <p className="truncate text-xs text-stone-500">
-                {mockUser.email}
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Slider Navigation Links */}
         <div className="flex-1 overflow-y-auto px-4 py-5">
           <p className="mb-2.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-stone-400">
@@ -360,7 +470,7 @@ const Navbar = () => {
           {isLoggedIn ? (
             <button
               type="button"
-              onClick={closeMobileMenu}
+              onClick={handleLogout}
               className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600 transition hover:bg-rose-100 cursor-pointer"
             >
               <LuLogOut className="text-base" />

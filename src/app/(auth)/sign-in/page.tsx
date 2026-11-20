@@ -2,14 +2,17 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import {
   LuArrowRight,
   LuEye,
   LuEyeOff,
+  LuLoader,
   LuLock,
   LuMail,
 } from "react-icons/lu";
+import { authClient } from "@/lib/auth-client";
 
 const GoogleIcon = () => (
   <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
@@ -40,11 +43,15 @@ interface SignInErrors {
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 export default function SignInPage() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState<SignInErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const validate = (): boolean => {
     const newErrors: SignInErrors = {};
@@ -66,21 +73,51 @@ export default function SignInPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validate()) {
       return;
     }
 
-    const signInData = {
-      email: email.trim(),
-      password,
-      rememberMe,
-    };
+    setIsSubmitting(true);
 
-    console.log("Sign In Submitted (JSON):", JSON.stringify(signInData, null, 2));
-    toast.success("Signed in successfully!");
+    try {
+      const res = await authClient.signIn.email({
+        email: email.trim(),
+        password,
+        rememberMe,
+      });
+
+      if (res.error) {
+        toast.error(res.error.message || "Invalid email or password.");
+        return;
+      }
+
+      console.log("Sign In Submitted (JSON):", JSON.stringify(res.data, null, 2));
+      toast.success("Signed in successfully!");
+      router.push("/");
+      router.refresh();
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "An unexpected error occurred.";
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setIsGoogleLoading(true);
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+    } catch {
+      setIsGoogleLoading(false);
+      toast.error("Google sign in failed. Please try again.");
+    }
   };
 
   return (
@@ -219,10 +256,20 @@ export default function SignInPage() {
             <div className="pt-2">
               <button
                 type="submit"
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-primary py-3.5 px-4 text-sm font-semibold text-white shadow-md shadow-brand-primary/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-primary/90 hover:shadow-lg focus:outline-none cursor-pointer"
+                disabled={isSubmitting}
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-primary py-3.5 px-4 text-sm font-semibold text-white shadow-md shadow-brand-primary/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-primary/90 hover:shadow-lg focus:outline-none cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
               >
-                <span>Sign In</span>
-                <LuArrowRight className="text-base" />
+                {isSubmitting ? (
+                  <>
+                    <LuLoader className="text-base animate-spin" />
+                    <span>Signing in...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Sign In</span>
+                    <LuArrowRight className="text-base" />
+                  </>
+                )}
               </button>
             </div>
           </form>
@@ -239,10 +286,21 @@ export default function SignInPage() {
           <div>
             <button
               type="button"
-              className="flex w-full items-center justify-center gap-3 rounded-2xl border border-stone-200/90 bg-white py-3 px-4 text-sm font-semibold text-stone-700 shadow-2xs transition-all duration-200 hover:border-stone-300 hover:bg-stone-50 hover:shadow-xs focus:outline-none cursor-pointer"
+              onClick={handleGoogleSignIn}
+              disabled={isGoogleLoading}
+              className="flex w-full items-center justify-center gap-3 rounded-2xl border border-stone-200/90 bg-white py-3 px-4 text-sm font-semibold text-stone-700 shadow-2xs transition-all duration-200 hover:border-stone-300 hover:bg-stone-50 hover:shadow-xs focus:outline-none cursor-pointer disabled:opacity-70"
             >
-              <GoogleIcon />
-              <span>Continue with Google</span>
+              {isGoogleLoading ? (
+                <>
+                  <LuLoader className="text-base animate-spin text-stone-500" />
+                  <span>Connecting to Google...</span>
+                </>
+              ) : (
+                <>
+                  <GoogleIcon />
+                  <span>Continue with Google</span>
+                </>
+              )}
             </button>
           </div>
 
