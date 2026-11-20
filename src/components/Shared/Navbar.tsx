@@ -234,8 +234,20 @@ const Navbar = () => {
     setIsMobileProfileOpen(false);
     setIsMobileMenuOpen(false);
     await signOut();
-    router.push("/");
-    router.refresh();
+
+    const currentPath =
+      typeof window !== "undefined"
+        ? window.location.pathname + window.location.search
+        : "/";
+    const isProtectedRoute =
+      currentPath.startsWith("/dashboard") ||
+      (currentPath.startsWith("/services/") && !currentPath.startsWith("/services?"));
+
+    if (isProtectedRoute) {
+      router.push(`/sign-in?callbackUrl=${encodeURIComponent(currentPath)}`);
+    } else {
+      router.refresh();
+    }
   };
 
   const navItems: NavItem[] = isLoggedIn

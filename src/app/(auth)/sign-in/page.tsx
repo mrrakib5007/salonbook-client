@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import {
   LuArrowRight,
@@ -42,8 +42,12 @@ interface SignInErrors {
 
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
-export default function SignInPage() {
+function SignInForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const rawCallback = searchParams.get("callbackUrl");
+  const callbackUrl =
+    rawCallback && rawCallback.startsWith("/") ? rawCallback : "/";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -94,9 +98,8 @@ export default function SignInPage() {
         return;
       }
 
-      console.log("Sign In Submitted (JSON):", JSON.stringify(res.data, null, 2));
       toast.success("Signed in successfully!");
-      router.push("/");
+      router.push(callbackUrl);
       router.refresh();
     } catch (err: unknown) {
       const message =
@@ -112,7 +115,7 @@ export default function SignInPage() {
       setIsGoogleLoading(true);
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/",
+        callbackURL: callbackUrl,
       });
     } catch {
       setIsGoogleLoading(false);
@@ -128,20 +131,19 @@ export default function SignInPage() {
 
       <div className="w-full max-w-md">
         {/* Card Container */}
-        <div className="overflow-hidden rounded-3xl border border-stone-200/80 bg-white/95 p-6 sm:p-9 shadow-xl backdrop-blur-xs">
+        <div className="overflow-hidden rounded-3xl border border-stone-200/90 bg-white p-7 sm:p-9 shadow-xl shadow-stone-900/5">
           {/* Header */}
-          <div className="text-center">
+          <div className="text-center mb-8">
             <h1 className="font-fraunces text-2xl sm:text-3xl font-semibold tracking-tight text-stone-900">
               Welcome Back
             </h1>
-
-            <p className="mt-2 text-xs sm:text-sm text-stone-600 leading-relaxed">
-              Sign in with your credentials to manage appointments and access your dashboard.
+            <p className="mt-2 text-xs sm:text-sm text-stone-500">
+              Sign in to manage appointments, payments, and services.
             </p>
           </div>
 
-          {/* Form */}
-          <form noValidate onSubmit={handleSubmit} className="mt-7 space-y-4 sm:space-y-4.5">
+          {/* Sign In Form */}
+          <form onSubmit={handleSubmit} noValidate className="space-y-4">
             {/* Email Field */}
             <div>
               <label
@@ -157,6 +159,7 @@ export default function SignInPage() {
                 <input
                   id="email"
                   type="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -164,11 +167,11 @@ export default function SignInPage() {
                       setErrors((prev) => ({ ...prev, email: undefined }));
                     }
                   }}
-                  placeholder="you@example.com"
-                  className={`w-full rounded-2xl border bg-stone-50/40 py-3 pl-10 pr-4 text-sm text-stone-900 placeholder-stone-400 shadow-2xs transition focus:bg-white focus:outline-none focus:ring-3 ${
+                  placeholder="e.g. name@example.com"
+                  className={`w-full rounded-2xl border bg-stone-50/50 py-3 pl-10 pr-4 text-sm text-stone-900 transition focus:bg-white focus:outline-none ${
                     errors.email
-                      ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/15"
-                      : "border-stone-200/90 focus:border-brand-primary focus:ring-brand-primary/15"
+                      ? "border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
+                      : "border-stone-200/90 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15"
                   }`}
                 />
               </div>
@@ -188,14 +191,7 @@ export default function SignInPage() {
                 >
                   Password
                 </label>
-                <Link
-                  href="/forgot-password"
-                  className="text-xs font-medium text-brand-primary hover:underline transition"
-                >
-                  Forgot password?
-                </Link>
               </div>
-
               <div className="relative">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-stone-400">
                   <LuLock className="text-base" />
@@ -203,6 +199,7 @@ export default function SignInPage() {
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
@@ -211,17 +208,17 @@ export default function SignInPage() {
                     }
                   }}
                   placeholder="••••••••"
-                  className={`w-full rounded-2xl border bg-stone-50/40 py-3 pl-10 pr-10 text-sm text-stone-900 placeholder-stone-400 shadow-2xs transition focus:bg-white focus:outline-none focus:ring-3 ${
+                  className={`w-full rounded-2xl border bg-stone-50/50 py-3 pl-10 pr-11 text-sm text-stone-900 transition focus:bg-white focus:outline-none ${
                     errors.password
-                      ? "border-rose-400 focus:border-rose-500 focus:ring-rose-500/15"
-                      : "border-stone-200/90 focus:border-brand-primary focus:ring-brand-primary/15"
+                      ? "border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-200"
+                      : "border-stone-200/90 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/15"
                   }`}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-stone-400 hover:text-stone-700 transition cursor-pointer"
+                  onClick={() => setShowPassword((prev) => !prev)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-stone-400 hover:text-stone-600 transition"
                 >
                   {showPassword ? (
                     <LuEyeOff className="text-base" />
@@ -237,18 +234,16 @@ export default function SignInPage() {
               )}
             </div>
 
-            {/* Remember Me Checkbox */}
+            {/* Remember Me */}
             <div className="flex items-center justify-between pt-1">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
+              <label className="flex items-center gap-2 text-xs font-medium text-stone-600 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded border-stone-300 text-brand-primary focus:ring-brand-primary/30 accent-brand-primary cursor-pointer"
+                  className="h-4 w-4 rounded border-stone-300 text-brand-primary focus:ring-brand-primary/20 accent-brand-primary cursor-pointer"
                 />
-                <span className="text-xs font-medium text-stone-600">
-                  Remember me on this device
-                </span>
+                <span>Remember me for 30 days</span>
               </label>
             </div>
 
@@ -257,7 +252,7 @@ export default function SignInPage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-primary py-3.5 px-4 text-sm font-semibold text-white shadow-md shadow-brand-primary/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-primary/90 hover:shadow-lg focus:outline-none cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-brand-primary py-3.5 px-4 text-sm font-semibold text-white shadow-md shadow-brand-primary/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-brand-primary/90 hover:shadow-lg focus:outline-none cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <>
@@ -282,7 +277,7 @@ export default function SignInPage() {
             </span>
           </div>
 
-          {/* Google Social Sign In Button - Under Submit Button */}
+          {/* Google Social Sign In Button */}
           <div>
             <button
               type="button"
@@ -309,7 +304,11 @@ export default function SignInPage() {
             <p className="text-xs sm:text-sm text-stone-600">
               Don&apos;t have an account?{" "}
               <Link
-                href="/sign-up"
+                href={
+                  callbackUrl !== "/"
+                    ? `/sign-up?callbackUrl=${encodeURIComponent(callbackUrl)}`
+                    : "/sign-up"
+                }
                 className="font-semibold text-brand-primary hover:underline transition"
               >
                 Sign Up
@@ -319,5 +318,19 @@ export default function SignInPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-[calc(100vh-4.5rem)] flex items-center justify-center py-12 px-4 bg-brand-light/30">
+          <div className="w-full max-w-md h-96 rounded-3xl bg-white/70 animate-pulse border border-brand-primary/10" />
+        </div>
+      }
+    >
+      <SignInForm />
+    </Suspense>
   );
 }

@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Suspense, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import {
   LuArrowRight,
@@ -52,8 +52,12 @@ const NAME_REGEX = /^[a-zA-Z\s.'-]{2,50}$/;
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const URL_REGEX = /^https?:\/\/[^\s$.?#].[^\s]*$/i;
 
-export default function SignUpPage() {
+function SignUpForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const rawCallback = searchParams.get("callbackUrl");
+  const callbackUrl =
+    rawCallback && rawCallback.startsWith("/") ? rawCallback : "/";
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -185,7 +189,7 @@ export default function SignUpPage() {
 
       console.log("Sign Up Submitted (JSON):", JSON.stringify(res.data, null, 2));
       toast.success("Account created successfully!");
-      router.push("/");
+      router.push(callbackUrl);
       router.refresh();
     } catch (err: unknown) {
       const message =
@@ -201,7 +205,7 @@ export default function SignUpPage() {
       setIsGoogleLoading(true);
       await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/",
+        callbackURL: callbackUrl,
       });
     } catch {
       setIsGoogleLoading(false);
@@ -580,7 +584,11 @@ export default function SignUpPage() {
             <p className="text-xs sm:text-sm text-stone-600">
               Already have an account?{" "}
               <Link
-                href="/sign-in"
+                href={
+                  callbackUrl !== "/"
+                    ? `/sign-in?callbackUrl=${encodeURIComponent(callbackUrl)}`
+                    : "/sign-in"
+                }
                 className="font-semibold text-brand-primary hover:underline transition"
               >
                 Sign In
@@ -590,5 +598,19 @@ export default function SignUpPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-[calc(100vh-4.5rem)] flex items-center justify-center py-12 px-4 bg-brand-light/30">
+          <div className="w-full max-w-xl h-96 rounded-3xl bg-white/70 animate-pulse border border-brand-primary/10" />
+        </div>
+      }
+    >
+      <SignUpForm />
+    </Suspense>
   );
 }
