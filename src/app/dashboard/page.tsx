@@ -40,6 +40,9 @@ export default function CustomerDashboardOverview() {
       let sessionToken: string | undefined;
       try {
         const sessionData = await authClient.getSession();
+        if ((sessionData?.data?.user as { role?: string } | undefined)?.role === "admin") {
+          return;
+        }
         sessionToken = (sessionData?.data?.session as { token?: string } | undefined)?.token;
       } catch {
         // ignore
@@ -82,6 +85,9 @@ export default function CustomerDashboardOverview() {
         let sessionToken: string | undefined;
         try {
           const sessionData = await authClient.getSession();
+          if ((sessionData?.data?.user as { role?: string } | undefined)?.role === "admin") {
+            return;
+          }
           sessionToken = (sessionData?.data?.session as { token?: string } | undefined)?.token;
         } catch {
           // ignore

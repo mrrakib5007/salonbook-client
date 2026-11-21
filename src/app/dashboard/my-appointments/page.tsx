@@ -389,13 +389,13 @@ export default function MyAppointmentsPage() {
             <table className="w-full text-left text-xs">
               <thead className="border-b border-stone-200 bg-stone-50/80 text-[11px] font-semibold uppercase tracking-wider text-stone-500">
                 <tr>
-                  <th className="px-5 py-3.5">Service</th>
-                  <th className="px-4 py-3.5">Schedule</th>
-                  <th className="px-4 py-3.5">Price</th>
-                  <th className="px-4 py-3.5">Booking Status</th>
-                  <th className="px-4 py-3.5">Payment</th>
-                  <th className="px-4 py-3.5">Requested On</th>
-                  <th className="px-5 py-3.5 text-right">Actions</th>
+                  <th className="px-3.5 py-3 w-[22%] max-w-42.5">Service</th>
+                  <th className="px-3 py-3">Schedule</th>
+                  <th className="px-2.5 py-3">Price</th>
+                  <th className="px-2.5 py-3">Booking Status</th>
+                  <th className="px-2.5 py-3">Payment</th>
+                  <th className="px-2.5 py-3">Requested On</th>
+                  <th className="px-3.5 py-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -405,25 +405,28 @@ export default function MyAppointmentsPage() {
                     className="transition hover:bg-stone-50/60"
                   >
                     {/* Service Info */}
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
+                    <td className="px-3.5 py-3 max-w-42.5">
+                      <div className="flex items-center gap-2.5">
                         {item.serviceImage ? (
-                          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-stone-200">
+                          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-stone-200">
                             <Image
                               src={item.serviceImage}
                               alt={item.serviceName}
                               fill
-                              sizes="48px"
+                              sizes="40px"
                               className="object-cover"
                             />
                           </div>
                         ) : (
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-light text-brand-primary">
-                            <LuScissors className="h-5 w-5" />
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-light text-brand-primary">
+                            <LuScissors className="h-4 w-4" />
                           </div>
                         )}
-                        <div className="min-w-0 max-w-50">
-                          <p className="truncate font-semibold text-stone-900">
+                        <div className="min-w-0 max-w-27.5 lg:max-w-35 xl:max-w-42.5">
+                          <p
+                            className="truncate font-semibold text-stone-900"
+                            title={item.serviceName}
+                          >
                             {item.serviceName}
                           </p>
                           <p className="truncate text-[11px] text-stone-500">
@@ -434,7 +437,7 @@ export default function MyAppointmentsPage() {
                     </td>
 
                     {/* Schedule */}
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       <p className="font-semibold text-stone-900">
                         {item.appointmentDate}
                       </p>
@@ -445,7 +448,7 @@ export default function MyAppointmentsPage() {
                     </td>
 
                     {/* Price */}
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="px-2.5 py-3 whitespace-nowrap">
                       <p className="font-fraunces font-bold text-stone-900 text-sm">
                         ${item.price}
                       </p>
@@ -457,22 +460,22 @@ export default function MyAppointmentsPage() {
                     </td>
 
                     {/* Booking Status */}
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="px-2.5 py-3 whitespace-nowrap">
                       {renderStatusBadge(item.appointmentStatus)}
                     </td>
 
                     {/* Payment Status */}
-                    <td className="px-4 py-4 whitespace-nowrap">
+                    <td className="px-2.5 py-3 whitespace-nowrap">
                       {renderPaymentBadge(item.paymentStatus)}
                     </td>
 
                     {/* Requested Date */}
-                    <td className="px-4 py-4 whitespace-nowrap text-stone-500 text-[11px]">
+                    <td className="px-2.5 py-3 whitespace-nowrap text-stone-500 text-[11px]">
                       {formatDate(item.createdAt)}
                     </td>
 
                     {/* Actions */}
-                    <td className="px-5 py-4 text-right whitespace-nowrap">
+                    <td className="px-3.5 py-3 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
                         {/* View Details */}
                         <button

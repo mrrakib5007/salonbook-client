@@ -13,7 +13,6 @@ import {
   LuLayoutDashboard,
   LuLogOut,
   LuMenu,
-  LuShieldAlert,
   LuUser,
   LuX,
 } from "react-icons/lu";
@@ -24,6 +23,15 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
+const emptySubscribe = () => () => {};
+function useMounted() {
+  return React.useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
+}
+
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -31,6 +39,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const mounted = useMounted();
   const profileDropdownRef = useRef<HTMLDivElement>(null);
 
   const currentUser = session?.user;
@@ -96,6 +105,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
+  // Redirect Admin immediately to /admin-dashboard (Admins cannot access customer dashboard)
+  useEffect(() => {
+    if (!isPending && session?.user) {
+      const isUserAdmin =
+        (session.user as { role?: string })?.role === "admin";
+      if (isUserAdmin) {
+        router.replace("/admin-dashboard");
+      }
+    }
+  }, [isPending, session, router]);
+
+  const isRestricted = isPending || isAdmin;
+
   const navLinks = [
     {
       name: "Overview",
@@ -118,8 +140,32 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   ];
 
   return (
-    <div className="flex min-h-screen bg-stone-100/70 text-stone-900">
-      {/* Mobile Sidebar Overlay */}
+    <div
+      suppressHydrationWarning
+      className="relative h-screen overflow-hidden bg-stone-100/70 text-stone-900"
+    >
+      {/* Full-screen Loading / Redirect Overlay for isPending or isAdmin */}
+      {isRestricted && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-100/90 backdrop-blur-xs">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-3 border-brand-primary border-t-transparent" />
+            <p className="text-xs sm:text-sm font-medium text-stone-700">
+              {isAdmin
+                ? "Redirecting to Admin Portal..."
+                : "Loading dashboard..."}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Main Layout - always renders {children} so Next.js segment validation passes */}
+      <div
+        className={`flex h-screen overflow-hidden ${
+          isRestricted ? "invisible pointer-events-none" : ""
+        }`}
+        aria-hidden={isRestricted}
+      >
+        {/* Mobile Sidebar Overlay */}
       {mobileMenuOpen && (
         <div
           className="fixed inset-0 z-40 bg-stone-900/50 backdrop-blur-xs lg:hidden"
@@ -132,13 +178,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 max-w-[85vw] lg:w-60 flex-col justify-between border-r border-stone-200/80 bg-white px-4 py-5 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex h-full w-64 max-w-[85vw] lg:w-60 shrink-0 flex-col justify-between border-r border-stone-200/80 bg-white px-4 py-5 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 lg:h-screen ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="space-y-6">
+        <div className="flex flex-1 flex-col overflow-y-auto space-y-6 pr-1">
           {/* Logo & Close button */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between shrink-0">
             <Logo />
             <button
               type="button"
@@ -203,7 +249,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
 
         {/* Sidebar Footer / Logout */}
-        <div className="border-t border-stone-200/80 pt-4">
+        <div className="border-t border-stone-200/80 pt-4 shrink-0">
           <button
             type="button"
             onClick={handleLogout}
@@ -220,9 +266,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">
+      <div className="flex min-w-0 flex-1 flex-col h-screen overflow-hidden">
         {/* Top Navbar Header */}
-        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-stone-200/80 bg-white/90 px-4 backdrop-blur-md sm:px-6 lg:px-8">
+        <header className="shrink-0 flex h-16 items-center justify-between border-b border-stone-200/80 bg-white/90 px-4 backdrop-blur-md sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -257,7 +303,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               aria-expanded={isProfileOpen}
               aria-haspopup="menu"
             >
-              {currentUser?.image ? (
+              {mounted && currentUser?.image ? (
                 <Image
                   src={currentUser.image}
                   alt={currentUser.name || "Customer"}
@@ -267,7 +313,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 />
               ) : (
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-primary/10 text-brand-primary font-bold text-sm ring-2 ring-brand-primary/20">
-                  {currentUser?.name
+                  {mounted && currentUser?.name
                     ? currentUser.name.charAt(0).toUpperCase()
                     : "U"}
                 </div>
@@ -287,11 +333,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               >
                 {/* User Info Header */}
                 <div className="border-b border-stone-100 px-3 py-2.5">
-                  <p className="truncate text-sm font-semibold text-stone-900">
-                    {currentUser?.name || "Customer"}
+                  <p suppressHydrationWarning className="truncate text-sm font-semibold text-stone-900">
+                    {mounted && currentUser?.name ? currentUser.name : "Customer"}
                   </p>
-                  <p className="truncate text-xs text-stone-500">
-                    {currentUser?.email || "customer@example.com"}
+                  <p suppressHydrationWarning className="truncate text-xs text-stone-500">
+                    {mounted && currentUser?.email ? currentUser.email : "customer@example.com"}
                   </p>
                   <div className="mt-2 flex items-center">
                     <span className="inline-flex items-center rounded-md border border-brand-primary/20 bg-brand-light px-2 py-0.5 text-[11px] font-medium capitalize text-brand-primary">
@@ -340,24 +386,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </header>
 
-        {/* Admin Warning Banner if role is admin */}
-        {isAdmin && !isPending && (
-          <div className="m-4 sm:m-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
-            <div className="flex items-center gap-3">
-              <LuShieldAlert className="h-5 w-5 text-amber-600 shrink-0" />
-              <div className="text-xs sm:text-sm">
-                <p className="font-semibold">Administrator Role Detected</p>
-                <p className="text-amber-700 mt-0.5">
-                  You are viewing the Customer Dashboard as an Administrator. Customer appointment booking features are restricted.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Page Content Body */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
+        {/* Page Content Body - Only this area scrolls vertically */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
     </div>
+  </div>
   );
 }

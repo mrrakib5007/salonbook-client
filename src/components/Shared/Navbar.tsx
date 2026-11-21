@@ -193,7 +193,7 @@ function ProfileMenuDropdown({
 
       <div className="py-1.5">
         <Link
-          href="/dashboard"
+          href={userRole === "admin" ? "/admin-dashboard" : "/dashboard"}
           onClick={onClose}
           className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-stone-700 transition hover:bg-brand-light hover:text-brand-primary"
         >
@@ -241,6 +241,7 @@ const Navbar = () => {
         : "/";
     const isProtectedRoute =
       currentPath.startsWith("/dashboard") ||
+      currentPath.startsWith("/admin-dashboard") ||
       (currentPath.startsWith("/services/") && !currentPath.startsWith("/services?"));
 
     if (isProtectedRoute) {
@@ -253,7 +254,11 @@ const Navbar = () => {
   const navItems: NavItem[] = isLoggedIn
     ? [
         ...PUBLIC_NAV_ITEMS,
-        { label: "Dashboard", href: "/dashboard", icon: LuLayoutDashboard },
+        {
+          label: "Dashboard",
+          href: userRole === "admin" ? "/admin-dashboard" : "/dashboard",
+          icon: LuLayoutDashboard,
+        },
       ]
     : PUBLIC_NAV_ITEMS;
 
