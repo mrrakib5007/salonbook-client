@@ -61,7 +61,7 @@ export default function ServiceDetailsClient({ service }: ServiceDetailsClientPr
       setLoadingSlots(true);
       try {
         const serverUrl =
-          process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
+          process.env.NEXT_PUBLIC_SERVER_URL;
         const serviceQuery = service?._id ? `&serviceId=${service._id}` : "";
         const res = await fetch(
           `${serverUrl}/api/appointments/booked-slots?date=${encodeURIComponent(selectedDate)}${serviceQuery}`,
@@ -113,7 +113,7 @@ export default function ServiceDetailsClient({ service }: ServiceDetailsClientPr
 
     try {
       const serverUrl =
-        process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
+        process.env.NEXT_PUBLIC_SERVER_URL;
 
       const res = await fetch(`${serverUrl}/api/appointments`, {
         method: "POST",

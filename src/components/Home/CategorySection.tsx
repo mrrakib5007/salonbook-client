@@ -41,7 +41,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
 async function getCategories(): Promise<Category[]> {
   try {
     const serverUrl =
-      process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
+      process.env.NEXT_PUBLIC_SERVER_URL;
     const res = await fetch(`${serverUrl}/api/categories`, {
       cache: "no-store",
     });

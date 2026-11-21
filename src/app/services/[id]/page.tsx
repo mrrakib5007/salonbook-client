@@ -14,7 +14,7 @@ interface PageProps {
 async function getServiceById(id: string): Promise<Service | null> {
   try {
     const serverUrl =
-      process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
+      process.env.NEXT_PUBLIC_SERVER_URL;
     const headersList = await headers();
     const cookie = headersList.get("cookie") || "";
 

@@ -44,7 +44,7 @@ export default function ServicesContent() {
   const [loading, setLoading] = useState<boolean>(true);
 
   const serverUrl = useMemo(
-    () => process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000",
+    () => process.env.NEXT_PUBLIC_SERVER_URL,
     []
   );
 

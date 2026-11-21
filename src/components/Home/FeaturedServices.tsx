@@ -7,7 +7,7 @@ import ServiceCard, { Service } from "@/components/Card/ServiceCard";
 async function getFeaturedServices(): Promise<Service[]> {
   try {
     const serverUrl =
-      process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
+      process.env.NEXT_PUBLIC_SERVER_URL;
     const res = await fetch(`${serverUrl}/api/services?limit=6`, {
       cache: "no-store",
     });

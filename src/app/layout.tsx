@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { Poppins, Fraunces } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
-import Navbar from "@/components/Shared/Navbar";
-import Footer from "@/components/Shared/Footer";
+import LayoutShell from "@/components/Shared/LayoutShell";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -21,17 +20,15 @@ export const metadata: Metadata = {
   description: "Book appointments at your favorite salon with ease.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
       className={`${poppins.variable} ${fraunces.variable} h-full antialiased`}
     >
-      <body className={`${poppins.className} min-h-full flex flex-col`}>
-        <Navbar />
+      <body className={`${poppins.className} min-h-full flex flex-col bg-stone-50/50`}>
         <Toaster />
-        {children}
-        <Footer />
+        <LayoutShell>{children}</LayoutShell>
       </body>
     </html>
   );
