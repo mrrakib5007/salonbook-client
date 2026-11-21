@@ -1,20 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getSessionCookie } from "better-auth/cookies";
 
 export async function proxy(request: NextRequest) {
-  let session = null;
+  const sessionCookie =
+    getSessionCookie(request) ||
+    request.cookies.get("__Secure-better-auth.session_token")?.value ||
+    request.cookies.get("better-auth.session_token")?.value;
 
-  try {
-    session = await auth.api.getSession({
-      headers: request.headers,
-    });
-  } catch (err) {
-    console.error("Auth session check error in proxy:", err);
-  }
-
-  const user = session?.user;
-
-  if (!user) {
+  if (!sessionCookie) {
     const loginUrl = new URL("/sign-in", request.url);
     loginUrl.searchParams.set(
       "callbackUrl",
