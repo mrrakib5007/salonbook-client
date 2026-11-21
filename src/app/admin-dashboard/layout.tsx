@@ -378,6 +378,14 @@ export default function AdminDashboardLayout({
                 {/* Menu Items */}
                 <div className="py-1.5 space-y-1">
                   <Link
+                    href="/admin-dashboard/profile"
+                    onClick={() => setIsProfileOpen(false)}
+                    className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium text-stone-700 transition hover:bg-stone-100 hover:text-stone-900"
+                  >
+                    <LuUser className="h-4 w-4 text-stone-400" />
+                    <span>My Profile</span>
+                  </Link>
+                  <Link
                     href="/"
                     onClick={() => setIsProfileOpen(false)}
                     className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-xs sm:text-sm font-medium text-stone-700 transition hover:bg-stone-100 hover:text-stone-900"
