@@ -10,6 +10,7 @@ import {
   LuPlus,
   LuRefreshCw,
 } from "react-icons/lu";
+import { authClient } from "@/lib/auth-client";
 
 interface CustomerStats {
   total: number;
@@ -35,8 +36,24 @@ export default function CustomerDashboardOverview() {
     try {
       const serverUrl =
         process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
+
+      let sessionToken: string | undefined;
+      try {
+        const sessionData = await authClient.getSession();
+        sessionToken = (sessionData?.data?.session as { token?: string } | undefined)?.token;
+      } catch {
+        // ignore
+      }
+
+      const headers: Record<string, string> = {};
+      if (sessionToken) {
+        headers["Authorization"] = `Bearer ${sessionToken}`;
+        headers["x-session-token"] = sessionToken;
+      }
+
       const res = await fetch(`${serverUrl}/api/customer/stats`, {
         credentials: "include",
+        headers,
       });
 
       const data = await res.json();
@@ -61,8 +78,24 @@ export default function CustomerDashboardOverview() {
       try {
         const serverUrl =
           process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000";
+
+        let sessionToken: string | undefined;
+        try {
+          const sessionData = await authClient.getSession();
+          sessionToken = (sessionData?.data?.session as { token?: string } | undefined)?.token;
+        } catch {
+          // ignore
+        }
+
+        const headers: Record<string, string> = {};
+        if (sessionToken) {
+          headers["Authorization"] = `Bearer ${sessionToken}`;
+          headers["x-session-token"] = sessionToken;
+        }
+
         const res = await fetch(`${serverUrl}/api/customer/stats`, {
           credentials: "include",
+          headers,
         });
         const data = await res.json();
         if (!ignore && res.ok && data.success) {
@@ -131,7 +164,7 @@ export default function CustomerDashboardOverview() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="font-fraunces text-2xl sm:text-3xl font-bold tracking-tight text-stone-900">
-            Dashboard Overview
+            Overview
           </h2>
           <p className="text-xs sm:text-sm text-stone-500 mt-1">
             Real-time status of your appointment requests and salon bookings

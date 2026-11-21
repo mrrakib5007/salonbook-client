@@ -14,7 +14,7 @@ import {
   LuTag,
   LuX,
 } from "react-icons/lu";
-import { useSession } from "@/lib/auth-client";
+import { authClient, useSession } from "@/lib/auth-client";
 import { Service } from "@/components/Card/ServiceCard";
 
 const TIME_SLOTS = [
@@ -115,12 +115,29 @@ export default function ServiceDetailsClient({ service }: ServiceDetailsClientPr
       const serverUrl =
         process.env.NEXT_PUBLIC_SERVER_URL;
 
+      // Extract active session token for cross-domain Vercel requests
+      let sessionToken = (session as { session?: { token?: string } } | undefined)?.session?.token;
+      if (!sessionToken) {
+        try {
+          const sessionData = await authClient.getSession();
+          sessionToken = (sessionData?.data?.session as { token?: string } | undefined)?.token;
+        } catch {
+          // ignore
+        }
+      }
+
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (sessionToken) {
+        headers["Authorization"] = `Bearer ${sessionToken}`;
+        headers["x-session-token"] = sessionToken;
+      }
+
       const res = await fetch(`${serverUrl}/api/appointments`, {
         method: "POST",
         credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           serviceId: service._id,
           customerId: currentUser?.id,

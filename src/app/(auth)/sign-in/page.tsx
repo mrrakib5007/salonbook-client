@@ -2,7 +2,7 @@
 
 import React, { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import {
   LuArrowRight,
@@ -43,7 +43,6 @@ interface SignInErrors {
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 
 function SignInForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const rawCallback = searchParams.get("callbackUrl");
   const callbackUrl =
@@ -99,8 +98,7 @@ function SignInForm() {
       }
 
       toast.success("Signed in successfully!");
-      router.push(callbackUrl);
-      router.refresh();
+      window.location.href = callbackUrl;
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : "An unexpected error occurred.";

@@ -37,6 +37,13 @@ export const auth = betterAuth({
     enabled: true,
   },
   baseURL: process.env.BETTER_AUTH_URL,
+  trustedOrigins: [
+    "http://localhost:3000",
+    "https://salonbookpro.vercel.app",
+    "https://api-salonbookpro.vercel.app",
+    process.env.BETTER_AUTH_URL,
+    process.env.NEXT_PUBLIC_BETTER_AUTH_URL,
+  ].filter(Boolean) as string[],
   socialProviders: { 
     google: { 
       clientId: process.env.GOOGLE_CLIENT_ID as string, 

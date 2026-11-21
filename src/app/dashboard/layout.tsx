@@ -13,7 +13,6 @@ import {
   LuLayoutDashboard,
   LuLogOut,
   LuMenu,
-  LuScissors,
   LuShieldAlert,
   LuUser,
   LuX,
@@ -99,7 +98,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const navLinks = [
     {
-      name: "Dashboard Overview",
+      name: "Overview",
       href: "/dashboard",
       icon: LuLayoutDashboard,
       active: pathname === "/dashboard",
@@ -109,7 +108,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       href: "/dashboard/my-appointments",
       icon: LuCalendar,
       active: pathname === "/dashboard/my-appointments",
-      badge: "Upcoming",
     },
     {
       name: "My Profile",
@@ -134,7 +132,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col justify-between border-r border-stone-200/80 bg-white px-5 py-6 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 max-w-[85vw] lg:w-60 flex-col justify-between border-r border-stone-200/80 bg-white px-4 py-5 transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 ${
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -181,11 +179,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       />
                       <span>{item.name}</span>
                     </div>
-                    {item.badge && !item.active && (
-                      <span className="rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-semibold text-stone-500">
-                        {item.badge}
-                      </span>
-                    )}
                   </Link>
                 );
               })}
@@ -204,13 +197,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               >
                 <LuHouse className="h-4 w-4 text-stone-400 group-hover:text-stone-700" />
                 <span>Back to Home</span>
-              </Link>
-              <Link
-                href="/services"
-                className="group flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-medium text-stone-600 transition hover:bg-stone-100 hover:text-stone-900"
-              >
-                <LuScissors className="h-4 w-4 text-stone-400 group-hover:text-stone-700" />
-                <span>Browse Salon Services</span>
               </Link>
             </nav>
           </div>
