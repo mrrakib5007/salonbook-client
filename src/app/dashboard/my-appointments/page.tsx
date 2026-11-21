@@ -12,8 +12,8 @@ import {
   LuClock,
   LuCreditCard,
   LuEye,
+  LuLoader,
   LuPlus,
-  LuRefreshCw,
   LuScissors,
   LuX,
 } from "react-icons/lu";
@@ -49,6 +49,7 @@ export default function MyAppointmentsPage() {
   const [cancellingAppointment, setCancellingAppointment] =
     useState<AppointmentItem | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [payingAppointmentId, setPayingAppointmentId] = useState<string | null>(null);
 
   const serverUrl = useMemo(
     () => process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:5000",
@@ -134,6 +135,50 @@ export default function MyAppointmentsPage() {
       ignore = true;
     };
   }, [serverUrl]);
+
+  // Check if redirected with ?payment_status=cancelled
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("payment_status") === "cancelled") {
+        toast("Payment process was cancelled. You can retry whenever you are ready.", {
+          icon: "ℹ️",
+        });
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, "", newUrl);
+      }
+    }
+  }, []);
+
+  // Handle Stripe Checkout Payment
+  const handleInitiatePayment = async (appointmentId: string) => {
+    try {
+      setPayingAppointmentId(appointmentId);
+      const authHeaders = await getAuthHeaders();
+      const res = await fetch(`${serverUrl}/api/customer/create-checkout-session`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...authHeaders,
+        },
+        credentials: "include",
+        body: JSON.stringify({ appointmentId }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success || !data.url) {
+        throw new Error(data.message || "Failed to initiate Stripe Checkout.");
+      }
+
+      // Redirect user directly to the Stripe-hosted Checkout page
+      window.location.assign(data.url);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to initiate payment."
+      );
+      setPayingAppointmentId(null);
+    }
+  };
 
   // Handle Cancel Appointment
   const handleConfirmCancel = async () => {
@@ -283,19 +328,6 @@ export default function MyAppointmentsPage() {
             <LuPlus className="h-3.5 w-3.5" />
             <span>Book Appointment</span>
           </Link>
-          <button
-            type="button"
-            onClick={fetchAppointments}
-            disabled={loading}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-semibold text-stone-700 transition hover:bg-stone-50 cursor-pointer"
-          >
-            <LuRefreshCw
-              className={`h-3.5 w-3.5 ${
-                loading ? "animate-spin text-brand-primary" : ""
-              }`}
-            />
-            <span>Refresh</span>
-          </button>
         </div>
       </div>
 
@@ -493,16 +525,19 @@ export default function MyAppointmentsPage() {
                           item.paymentStatus === "Unpaid" && (
                             <button
                               type="button"
-                              onClick={() => {
-                                toast(
-                                  "Stripe Checkout flow will be initiated for this confirmed appointment.",
-                                  { icon: "💳" }
-                                );
-                              }}
-                              className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1.5 text-[11px] font-semibold text-white shadow-xs transition hover:bg-emerald-700 cursor-pointer"
+                              disabled={payingAppointmentId === item._id}
+                              onClick={() => handleInitiatePayment(item._id)}
+                              className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-emerald-700 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
+                              title="Pay with Stripe"
                             >
-                              <LuCreditCard className="h-3.5 w-3.5" />
-                              <span>Pay Now</span>
+                              {payingAppointmentId === item._id ? (
+                                <LuLoader className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <LuCreditCard className="h-3.5 w-3.5" />
+                              )}
+                              <span>
+                                {payingAppointmentId === item._id ? "Processing..." : "Pay Now"}
+                              </span>
                             </button>
                           )}
 
@@ -606,16 +641,20 @@ export default function MyAppointmentsPage() {
                   item.paymentStatus === "Unpaid" && (
                     <button
                       type="button"
-                      onClick={() => {
-                        toast(
-                          "Stripe Checkout flow will be initiated for this confirmed appointment.",
-                          { icon: "💳" }
-                        );
-                      }}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-emerald-700 cursor-pointer"
+                      disabled={payingAppointmentId === item._id}
+                      onClick={() => handleInitiatePayment(item._id)}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-emerald-700 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
                     >
-                      <LuCreditCard className="h-3.5 w-3.5" />
-                      <span>Pay Now</span>
+                      {payingAppointmentId === item._id ? (
+                        <LuLoader className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <LuCreditCard className="h-3.5 w-3.5" />
+                      )}
+                      <span>
+                        {payingAppointmentId === item._id
+                          ? "Redirecting to Stripe..."
+                          : "Pay Now"}
+                      </span>
                     </button>
                   )}
 
@@ -780,15 +819,20 @@ export default function MyAppointmentsPage() {
                 selectedAppointment.paymentStatus === "Unpaid" && (
                   <button
                     type="button"
-                    onClick={() => {
-                      toast(
-                        "Stripe Checkout flow will be initiated for this confirmed appointment.",
-                        { icon: "💳" }
-                      );
-                    }}
-                    className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-emerald-700 cursor-pointer"
+                    disabled={payingAppointmentId === selectedAppointment._id}
+                    onClick={() => handleInitiatePayment(selectedAppointment._id)}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-emerald-700 disabled:opacity-70 disabled:cursor-not-allowed cursor-pointer"
                   >
-                    Pay Now (${selectedAppointment.price})
+                    {payingAppointmentId === selectedAppointment._id ? (
+                      <LuLoader className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <LuCreditCard className="h-3.5 w-3.5" />
+                    )}
+                    <span>
+                      {payingAppointmentId === selectedAppointment._id
+                        ? "Redirecting..."
+                        : `Pay Now ($${selectedAppointment.price})`}
+                    </span>
                   </button>
                 )}
               <button

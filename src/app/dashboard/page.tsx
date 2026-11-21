@@ -8,7 +8,6 @@ import {
   LuClock,
   LuLayers,
   LuPlus,
-  LuRefreshCw,
 } from "react-icons/lu";
 import { authClient } from "@/lib/auth-client";
 
@@ -184,15 +183,6 @@ export default function CustomerDashboardOverview() {
             <LuPlus className="h-3.5 w-3.5" />
             <span>Book Appointment</span>
           </Link>
-          <button
-            type="button"
-            onClick={fetchStats}
-            disabled={loading}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-semibold text-stone-700 transition hover:bg-stone-50 cursor-pointer"
-          >
-            <LuRefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin text-brand-primary" : ""}`} />
-            <span>Refresh</span>
-          </button>
         </div>
       </div>
 

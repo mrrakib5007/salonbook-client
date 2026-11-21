@@ -2,14 +2,12 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import toast from "react-hot-toast";
 import {
   LuCalendar,
   LuCircleAlert,
   LuCircleCheck,
   LuClock,
   LuCreditCard,
-  LuRefreshCw,
   LuScissors,
   LuUsers,
 } from "react-icons/lu";
@@ -39,7 +37,6 @@ export default function AdminOverviewPage() {
 
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryTrigger, setRetryTrigger] = useState(0);
 
@@ -104,7 +101,6 @@ export default function AdminOverviewPage() {
       } finally {
         if (!ignore) {
           setLoading(false);
-          setRefreshing(false);
         }
       }
     }
@@ -115,12 +111,6 @@ export default function AdminOverviewPage() {
       ignore = true;
     };
   }, [serverUrl, retryTrigger]);
-
-  const handleRefresh = () => {
-    setRefreshing(true);
-    setRetryTrigger((prev) => prev + 1);
-    toast.success("Refreshing dashboard data...", { duration: 1500 });
-  };
 
   const adminName = mounted && session?.user?.name ? session.user.name : "Administrator";
 
@@ -143,21 +133,6 @@ export default function AdminOverviewPage() {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={handleRefresh}
-            disabled={loading || refreshing}
-            className="inline-flex items-center gap-2 rounded-xl border border-stone-200 bg-white px-3.5 py-2 text-xs sm:text-sm font-semibold text-stone-700 shadow-xs hover:bg-stone-50 transition cursor-pointer disabled:opacity-50"
-            title="Refresh statistics"
-          >
-            <LuRefreshCw
-              className={`h-4 w-4 text-stone-500 ${
-                refreshing ? "animate-spin text-brand-primary" : ""
-              }`}
-            />
-            <span>{refreshing ? "Updating..." : "Refresh"}</span>
-          </button>
-
           <Link
             href="/admin-dashboard/manage-services"
             className="inline-flex items-center gap-2 rounded-xl bg-brand-primary px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-brand-primary/90 transition cursor-pointer"

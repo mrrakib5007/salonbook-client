@@ -10,7 +10,6 @@ import {
   LuLoader,
   LuPencil,
   LuPlus,
-  LuRefreshCw,
   LuRotateCcw,
   LuScissors,
   LuSearch,
@@ -49,7 +48,6 @@ export default function ManageServicesPage() {
   const [services, setServices] = useState<SalonService[]>([]);
   const [categories, setCategories] = useState<string[]>(FALLBACK_CATEGORIES);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Filters & search
@@ -112,9 +110,8 @@ export default function ManageServicesPage() {
   };
 
   // Fetch all services for admin
-  const fetchServices = useCallback(async (isManualRefresh = false) => {
-    if (isManualRefresh) setRefreshing(true);
-    else setLoading(true);
+  const fetchServices = useCallback(async () => {
+    setLoading(true);
     setError(null);
 
     try {
@@ -147,7 +144,6 @@ export default function ManageServicesPage() {
       toast.error(msg);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   }, [selectedCategory, selectedStatus, searchTerm, sortBy, serverUrl]);
 
@@ -481,21 +477,6 @@ export default function ManageServicesPage() {
         <div className="flex items-center gap-2.5">
           <button
             type="button"
-            onClick={() => fetchServices(true)}
-            disabled={loading || refreshing}
-            className="inline-flex items-center gap-2 rounded-xl border border-stone-200 bg-white px-3.5 py-2 text-xs sm:text-sm font-semibold text-stone-700 shadow-xs hover:bg-stone-50 transition cursor-pointer disabled:opacity-50"
-            title="Refresh list"
-          >
-            <LuRefreshCw
-              className={`h-4 w-4 text-stone-500 ${
-                refreshing ? "animate-spin text-brand-primary" : ""
-              }`}
-            />
-            <span>{refreshing ? "Refreshing..." : "Refresh"}</span>
-          </button>
-
-          <button
-            type="button"
             onClick={handleOpenCreateModal}
             className="inline-flex items-center gap-2 rounded-xl bg-brand-primary px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-brand-primary/90 transition cursor-pointer"
           >
@@ -511,11 +492,11 @@ export default function ManageServicesPage() {
           <LuCircleAlert className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
           <div className="flex-1">
             <p className="font-semibold">{error}</p>
-            <p className="mt-0.5 text-rose-600">Please check your network connection or try refreshing the list.</p>
+            <p className="mt-0.5 text-rose-600">Please check your network connection and try again.</p>
           </div>
           <button
             type="button"
-            onClick={() => fetchServices(true)}
+            onClick={() => fetchServices()}
             className="rounded-lg bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-200 cursor-pointer"
           >
             Retry
@@ -602,7 +583,7 @@ export default function ManageServicesPage() {
 
       {/* Services Table Card */}
       <div className="overflow-hidden rounded-3xl border border-stone-200/90 bg-white shadow-xs">
-        {loading && !refreshing ? (
+        {loading ? (
           /* Loading Skeletons */
           <div className="p-4 sm:p-6 space-y-3.5">
             {[...Array(5)].map((_, i) => (

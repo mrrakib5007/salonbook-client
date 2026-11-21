@@ -9,7 +9,6 @@ import {
   LuCircleCheck,
   LuEye,
   LuPhone,
-  LuRefreshCw,
   LuRotateCcw,
   LuSearch,
   LuShieldAlert,
@@ -35,7 +34,6 @@ export interface SalonUser {
 export default function ManageUsersPage() {
   const [users, setUsers] = useState<SalonUser[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Filters & search
@@ -77,9 +75,8 @@ export default function ManageUsersPage() {
 
   // Fetch users
   const fetchUsers = useCallback(
-    async (isManualRefresh = false) => {
-      if (isManualRefresh) setRefreshing(true);
-      else setLoading(true);
+    async () => {
+      setLoading(true);
       setError(null);
 
       try {
@@ -115,7 +112,6 @@ export default function ManageUsersPage() {
         );
       } finally {
         setLoading(false);
-        setRefreshing(false);
       }
     },
     [serverUrl, searchTerm, selectedStatus, sortBy]
@@ -212,7 +208,7 @@ export default function ManageUsersPage() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Top Header & Refresh Action */}
+      {/* Top Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold font-fraunces text-stone-900 tracking-tight">
@@ -221,23 +217,6 @@ export default function ManageUsersPage() {
           <p className="text-xs sm:text-sm text-stone-500 mt-1">
             View registered customer profiles, inspect booking history, and manage account access.
           </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => fetchUsers(true)}
-            disabled={loading || refreshing}
-            className="inline-flex items-center gap-2 rounded-xl border border-stone-200 bg-white px-3.5 py-2 text-xs sm:text-sm font-semibold text-stone-700 shadow-xs hover:bg-stone-50 transition cursor-pointer disabled:opacity-50"
-            title="Refresh list"
-          >
-            <LuRefreshCw
-              className={`h-4 w-4 text-stone-500 ${
-                refreshing ? "animate-spin text-brand-primary" : ""
-              }`}
-            />
-            <span>{refreshing ? "Updating..." : "Refresh"}</span>
-          </button>
         </div>
       </div>
 
@@ -317,7 +296,7 @@ export default function ManageUsersPage() {
 
       {/* Users Container */}
       <div className="overflow-hidden rounded-3xl border border-stone-200/90 bg-white shadow-xs">
-        {loading && !refreshing ? (
+        {loading ? (
           /* Loading Skeletons */
           <div className="p-4 sm:p-6 space-y-3.5">
             {[...Array(5)].map((_, i) => (
