@@ -268,7 +268,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col h-screen overflow-hidden">
         {/* Top Navbar Header */}
-        <header className="shrink-0 flex h-16 items-center justify-between border-b border-stone-200/80 bg-white/90 px-4 backdrop-blur-md sm:px-6 lg:px-8">
+        <header className="shrink-0 relative z-30 flex h-16 items-center justify-between border-b border-stone-200/80 bg-white/90 px-4 backdrop-blur-md sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -292,7 +292,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           {/* Top Bar Right: Profile Dropdown */}
-          <div ref={profileDropdownRef} className="relative">
+          <div ref={profileDropdownRef} className="relative z-50">
             <button
               type="button"
               onClick={() => {

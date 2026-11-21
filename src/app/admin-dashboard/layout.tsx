@@ -50,11 +50,14 @@ export default function AdminDashboardLayout({
   const currentUser = session?.user;
   const userRole = (currentUser as { role?: string } | undefined)?.role || "user";
   const isAdmin = userRole === "admin";
+  const isRestricted = isPending || !isAdmin;
 
   // Role Protection: Only Admin can access /admin-dashboard
   useEffect(() => {
-    if (!isPending && session?.user) {
-      if (!isAdmin) {
+    if (!isPending) {
+      if (!session?.user) {
+        router.replace("/sign-in?callbackUrl=/admin-dashboard");
+      } else if (!isAdmin) {
         toast.error("Access restricted: Administrator privileges required.");
         router.replace("/dashboard");
       }
@@ -162,9 +165,30 @@ export default function AdminDashboardLayout({
   return (
     <div
       suppressHydrationWarning
-      className="flex h-screen overflow-hidden bg-stone-100/70 text-stone-900"
+      className="relative h-screen overflow-hidden bg-stone-100/70 text-stone-900"
     >
-      {/* Mobile Sidebar Overlay */}
+      {/* Full-screen Loading / Redirect Overlay for isPending or !isAdmin */}
+      {isRestricted && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-100/90 backdrop-blur-xs">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-3 border-brand-primary border-t-transparent" />
+            <p className="text-xs sm:text-sm font-medium text-stone-700">
+              {!isPending && !isAdmin
+                ? "Access restricted. Redirecting to Customer Portal..."
+                : "Verifying administrative access..."}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Main Layout - invisible when isRestricted to prevent any UI leakage and retain Next.js instant navigation */}
+      <div
+        className={`flex h-screen overflow-hidden ${
+          isRestricted ? "invisible pointer-events-none" : ""
+        }`}
+        aria-hidden={isRestricted}
+      >
+        {/* Mobile Sidebar Overlay */}
       {mobileMenuOpen && (
         <div
           className="fixed inset-0 z-40 bg-stone-900/50 backdrop-blur-xs lg:hidden"
@@ -267,7 +291,7 @@ export default function AdminDashboardLayout({
       {/* Main Content Area */}
       <div className="flex min-w-0 flex-1 flex-col h-screen overflow-hidden">
         {/* Top Navbar Header */}
-        <header className="shrink-0 flex h-16 items-center justify-between border-b border-stone-200/80 bg-white/90 px-4 backdrop-blur-md sm:px-6 lg:px-8">
+        <header className="shrink-0 relative z-30 flex h-16 items-center justify-between border-b border-stone-200/80 bg-white/90 px-4 backdrop-blur-md sm:px-6 lg:px-8">
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -291,7 +315,7 @@ export default function AdminDashboardLayout({
           </div>
 
           {/* Top Bar Right: Profile Dropdown */}
-          <div ref={profileDropdownRef} className="relative">
+          <div ref={profileDropdownRef} className="relative z-50">
             <button
               type="button"
               onClick={() => {
@@ -383,5 +407,6 @@ export default function AdminDashboardLayout({
         </main>
       </div>
     </div>
-  );
+  </div>
+);
 }

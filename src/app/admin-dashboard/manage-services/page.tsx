@@ -984,8 +984,8 @@ export default function ManageServicesPage() {
                     onChange={(e) => setFormStatus(e.target.value as "active" | "inactive")}
                     className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm font-medium text-stone-900 transition focus:border-brand-primary focus:outline-none cursor-pointer"
                   >
-                    <option value="active">Active (Visible & Bookable)</option>
-                    <option value="inactive">Inactive (Hidden)</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
                   </select>
                 </div>
               </div>
