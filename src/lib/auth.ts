@@ -17,6 +17,12 @@ export const auth = betterAuth({
         defaultValue: "user",
         input: false,
       },
+      isBlocked: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        input: false,
+      },
     },
   },
   databaseHooks: {
@@ -27,6 +33,7 @@ export const auth = betterAuth({
             data: {
               ...user,
               role: user.role || "user",
+              isBlocked: Boolean(user.isBlocked) || false,
             },
           };
         },

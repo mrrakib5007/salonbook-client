@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import {
   LuCalendar,
@@ -10,6 +11,7 @@ import {
   LuCircleCheck,
   LuClock,
   LuLoader,
+  LuShieldAlert,
   LuShieldCheck,
   LuTag,
   LuX,
@@ -32,11 +34,21 @@ interface ServiceDetailsClientProps {
 }
 
 export default function ServiceDetailsClient({ service }: ServiceDetailsClientProps) {
-  const { data: session } = useSession();
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
   const currentUser = session?.user;
   const userRole = (currentUser as { role?: string } | undefined)?.role || "user";
   const isAdmin = userRole === "admin";
+  const isBlocked = Boolean(
+    (currentUser as { isBlocked?: boolean } | undefined)?.isBlocked
+  );
   const isActive = service.status === "active";
+
+  useEffect(() => {
+    if (!isPending && isBlocked) {
+      router.replace("/account-restricted");
+    }
+  }, [isPending, isBlocked, router]);
 
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedSlot, setSelectedSlot] = useState("");
@@ -97,6 +109,11 @@ export default function ServiceDetailsClient({ service }: ServiceDetailsClientPr
 
     if (isAdmin) {
       toast.error("Administrators cannot book customer appointments.");
+      return;
+    }
+
+    if (isBlocked) {
+      toast.error("Your account has been restricted. You cannot book appointments.");
       return;
     }
 
@@ -174,6 +191,17 @@ export default function ServiceDetailsClient({ service }: ServiceDetailsClientPr
       setIsSubmitting(false);
     }
   };
+
+  if (!isPending && isBlocked) {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center py-20 px-4 text-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-3 border-rose-500 border-t-transparent mb-3" />
+        <p className="text-xs sm:text-sm font-medium text-stone-700">
+          Account restricted. Redirecting...
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-stone-50/50 pb-20 pt-8 sm:pt-12">
@@ -374,6 +402,19 @@ export default function ServiceDetailsClient({ service }: ServiceDetailsClientPr
                   </div>
                 </div>
 
+                {/* Account Restricted Alert for Blocked Users */}
+                {isBlocked && (
+                  <div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 p-3.5 text-xs text-rose-800 flex items-start gap-2.5">
+                    <LuShieldAlert className="h-4 w-4 text-rose-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold">Booking Access Restricted</p>
+                      <p className="text-[11px] text-rose-700 mt-0.5">
+                        Your account has been suspended by an administrator. You cannot book appointments.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Booking Form */}
                 <form onSubmit={handleBookingSubmit} className="space-y-4">
                     {/* 1. Select Appointment Date * */}
@@ -389,7 +430,7 @@ export default function ServiceDetailsClient({ service }: ServiceDetailsClientPr
                         type="date"
                         min={todayStr}
                         value={selectedDate}
-                        disabled={isAdmin || !isActive}
+                        disabled={isAdmin || isBlocked || !isActive}
                         onChange={(e) => {
                           const val = e.target.value;
                           setSelectedDate(val);
@@ -423,7 +464,7 @@ export default function ServiceDetailsClient({ service }: ServiceDetailsClientPr
                       <select
                         id="availableTimeSlot"
                         value={selectedSlot}
-                        disabled={isAdmin || !isActive || !selectedDate || loadingSlots}
+                        disabled={isAdmin || isBlocked || !isActive || !selectedDate || loadingSlots}
                         onChange={(e) => setSelectedSlot(e.target.value)}
                         required
                         className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-stone-800 transition focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/15 disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed cursor-pointer"
@@ -463,7 +504,7 @@ export default function ServiceDetailsClient({ service }: ServiceDetailsClientPr
                         id="additionalMessage"
                         rows={3}
                         value={message}
-                        disabled={isAdmin || !isActive}
+                        disabled={isAdmin || isBlocked || !isActive}
                         onChange={(e) => setMessage(e.target.value)}
                         placeholder="Mention any preferences, stylist request, or notes..."
                         className="w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-xs sm:text-sm text-stone-800 transition focus:border-brand-primary focus:outline-none focus:ring-2 focus:ring-brand-primary/15 resize-none disabled:bg-stone-100 disabled:text-stone-400 disabled:cursor-not-allowed"
@@ -476,13 +517,14 @@ export default function ServiceDetailsClient({ service }: ServiceDetailsClientPr
                         type="submit"
                         disabled={
                           isAdmin ||
+                          isBlocked ||
                           !isActive ||
                           isSubmitting ||
                           !selectedDate ||
                           !selectedSlot
                         }
                         className={`flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 px-4 text-sm font-semibold transition-all duration-200 focus:outline-none ${
-                          isAdmin || !isActive || !selectedDate || !selectedSlot
+                          isAdmin || isBlocked || !isActive || !selectedDate || !selectedSlot
                             ? "bg-stone-200 text-stone-400 cursor-not-allowed opacity-75"
                             : "bg-brand-primary text-white shadow-lg shadow-brand-primary/25 hover:-translate-y-0.5 hover:bg-brand-primary/90 hover:shadow-xl cursor-pointer"
                         }`}
@@ -498,6 +540,8 @@ export default function ServiceDetailsClient({ service }: ServiceDetailsClientPr
                             <span>
                               {isAdmin
                                 ? "Booking Disabled (Admin)"
+                                : isBlocked
+                                ? "Booking Disabled (Account Restricted)"
                                 : !isActive
                                 ? "Service Unavailable"
                                 : "Book Appointment"}

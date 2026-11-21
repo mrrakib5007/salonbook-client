@@ -58,8 +58,14 @@ export default function AdminDashboardLayout({
       if (!session?.user) {
         router.replace("/sign-in?callbackUrl=/admin-dashboard");
       } else if (!isAdmin) {
-        toast.error("Access restricted: Administrator privileges required.");
-        router.replace("/dashboard");
+        const isBlocked = Boolean(
+          (session.user as { isBlocked?: boolean } | undefined)?.isBlocked
+        );
+        if (isBlocked) {
+          router.replace("/account-restricted");
+        } else {
+          router.replace("/unauthorized");
+        }
       }
     }
   }, [isPending, session, isAdmin, router]);
@@ -174,7 +180,7 @@ export default function AdminDashboardLayout({
             <div className="h-8 w-8 animate-spin rounded-full border-3 border-brand-primary border-t-transparent" />
             <p className="text-xs sm:text-sm font-medium text-stone-700">
               {!isPending && !isAdmin
-                ? "Access restricted. Redirecting to Customer Portal..."
+                ? "Unauthorized access. Redirecting..."
                 : "Verifying administrative access..."}
             </p>
           </div>

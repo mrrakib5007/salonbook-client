@@ -45,6 +45,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const currentUser = session?.user;
   const userRole = (currentUser as { role?: string } | undefined)?.role || "user";
   const isAdmin = userRole === "admin";
+  const isBlocked = Boolean(
+    (currentUser as { isBlocked?: boolean } | undefined)?.isBlocked
+  );
 
   // Close dropdown on outside click or Escape
   useEffect(() => {
@@ -105,18 +108,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
-  // Redirect Admin immediately to /admin-dashboard (Admins cannot access customer dashboard)
+  // Redirect Admin to /admin-dashboard and Blocked users to /account-restricted
   useEffect(() => {
     if (!isPending && session?.user) {
       const isUserAdmin =
         (session.user as { role?: string })?.role === "admin";
       if (isUserAdmin) {
         router.replace("/admin-dashboard");
+      } else if (isBlocked) {
+        router.replace("/account-restricted");
       }
     }
-  }, [isPending, session, router]);
+  }, [isPending, session, isBlocked, router]);
 
-  const isRestricted = isPending || isAdmin;
+  const isRestricted = isPending || isAdmin || isBlocked;
 
   const navLinks = [
     {
@@ -144,7 +149,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       suppressHydrationWarning
       className="relative h-screen overflow-hidden bg-stone-100/70 text-stone-900"
     >
-      {/* Full-screen Loading / Redirect Overlay for isPending or isAdmin */}
+      {/* Full-screen Loading / Redirect Overlay for isPending, isAdmin, or isBlocked */}
       {isRestricted && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-stone-100/90 backdrop-blur-xs">
           <div className="flex flex-col items-center gap-3 text-center">
@@ -152,6 +157,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <p className="text-xs sm:text-sm font-medium text-stone-700">
               {isAdmin
                 ? "Redirecting to Admin Portal..."
+                : isBlocked
+                ? "Account restricted. Redirecting..."
                 : "Loading dashboard..."}
             </p>
           </div>
